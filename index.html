@@ -1,0 +1,133 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Magic Pantry</title>
+<style>
+:root{--g:#2e7d32;--l:#e8f5e9}*{box-sizing:border-box}body{margin:0;font-family:system-ui,sans-serif;background:#f6f7f5;color:#222}
+header{background:var(--g);color:#fff;padding:14px 18px}header h1{margin:0;font-size:22px}
+.banner{background:#fff3cd;color:#7a5b00;text-align:center;font-size:13px;padding:5px}
+nav{display:flex;gap:4px;background:#fff;padding:8px;overflow-x:auto;position:sticky;top:0;box-shadow:0 2px 4px #0001}
+nav button{flex:1;border:0;background:#eee;padding:10px;border-radius:8px;font-weight:600;cursor:pointer;white-space:nowrap}
+nav button.on{background:var(--g);color:#fff}main{max-width:900px;margin:auto;padding:16px}
+.card{background:#fff;border-radius:12px;padding:16px;margin-bottom:14px;box-shadow:0 1px 3px #0002}
+.btn{background:var(--g);color:#fff;border:0;padding:10px 16px;border-radius:8px;cursor:pointer;font-weight:600}
+.btn.alt{background:#fff;color:var(--g);border:2px solid var(--g)}table{width:100%;border-collapse:collapse}
+td,th{padding:6px;border-bottom:1px solid #eee;text-align:left}input,select{padding:8px;border:1px solid #ccc;border-radius:6px;width:100%}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.item{background:#fff;border-radius:10px;padding:12px;text-align:center;box-shadow:0 1px 3px #0002}.item .e{font-size:40px}
+.cats button{margin:3px;border:1px solid var(--g);background:#fff;color:var(--g);padding:6px 12px;border-radius:20px;cursor:pointer}
+.cats button.on{background:var(--g);color:#fff}.ans{font-size:18px;padding:12px;border-radius:8px;margin-top:10px}
+.yes{background:var(--l)}.no{background:#fdecea}.tag{display:inline-block;background:var(--l);padding:3px 9px;border-radius:12px;margin:2px;font-size:13px}
+.miss{background:#fdecea}.pay label{display:block;padding:10px;border:1px solid #ddd;border-radius:8px;margin:6px 0;cursor:pointer}
+.hide{display:none}.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+</style></head><body>
+<header><h1>🥫 Magic Pantry</h1><div style="font-size:13px">Dr Paul Magic's kitchen, tracked from your receipts</div></header>
+<div class="banner">Demo: no real charges or payments are made</div>
+<nav id="nav"></nav><main id="app"></main>
+<script>
+const LOADED={};function need(u){return LOADED[u]||(LOADED[u]=new Promise((ok,no)=>{const e=document.createElement("script");e.src=u;e.onload=ok;e.onerror=()=>no(new Error("Couldn't load "+u));document.head.appendChild(e)}))}
+const CAT={Fruits:[["Apples","🍎",1.29,"lb"],["Bananas","🍌",0.69,"lb"],["Oranges","🍊",1.49,"lb"],["Strawberries","🍓",3.99,"pk"],["Grapes","🍇",2.99,"lb"],["Lemons","🍋",0.79,"ea"],["Avocados","🥑",1.5,"ea"],["Blueberries","🫐",4.49,"pk"]],
+Vegetables:[["Tomatoes","🍅",1.99,"lb"],["Onions","🧅",0.99,"lb"],["Garlic","🧄",0.5,"ea"],["Potatoes","🥔",0.89,"lb"],["Carrots","🥕",1.09,"lb"],["Broccoli","🥦",2.29,"ea"],["Lettuce","🥬",1.99,"ea"],["Bell Peppers","🫑",1.25,"ea"],["Corn","🌽",0.6,"ea"],["Mushrooms","🍄",2.99,"pk"],["Cucumber","🥒",0.99,"ea"],["Spinach","🥬",3.49,"bag"]],
+Meats:[["Chicken Breast","🍗",5.99,"lb"],["Ground Beef","🥩",5.49,"lb"],["Steak","🥩",11.99,"lb"],["Bacon","🥓",6.49,"pk"],["Pork Chops","🍖",4.99,"lb"],["Salmon","🐟",10.99,"lb"],["Shrimp","🦐",9.99,"lb"],["Turkey Slices","🦃",4.79,"pk"]],
+Dairy:[["Milk","🥛",3.49,"gal"],["Eggs","🥚",3.99,"dz"],["Butter","🧈",4.29,"lb"],["Cheddar Cheese","🧀",4.99,"pk"],["Yogurt","🍦",1.29,"ea"],["Parmesan","🧀",5.99,"pk"]],
+Pantry:[["Rice","🍚",2.99,"bag"],["Pasta","🍝",1.49,"box"],["Bread","🍞",2.99,"loaf"],["Tortillas","🫓",2.49,"pk"],["Canned Peas","🥫",0.99,"can"],["Canned Tomatoes","🥫",1.29,"can"],["Black Beans","🥫",1.09,"can"],["Olive Oil","🫒",7.99,"btl"],["Flour","🌾",3.49,"bag"],["Peanut Butter","🥜",3.29,"jar"],["Soy Sauce","🍶",2.49,"btl"]]};
+const ALL={};for(const c in CAT)CAT[c].forEach(([n,e,p,u])=>ALL[n]={n,e,p,u,c});
+const RECIPES=[
+["Spaghetti with Tomato Sauce",["Pasta","Canned Tomatoes","Garlic","Onions","Olive Oil"],"Boil pasta. Sauté onion and garlic in oil, add tomatoes, and simmer 15 min. Toss with the pasta."],
+["Chicken Stir-Fry",["Chicken Breast","Broccoli","Bell Peppers","Soy Sauce","Rice"],"Cook rice. Sear sliced chicken, add the vegetables and soy sauce, and stir-fry 6 min."],
+["Scrambled Eggs & Toast",["Eggs","Butter","Bread"],"Whisk eggs, cook gently in butter, and serve with toast."],
+["Cheese Omelette",["Eggs","Cheddar Cheese","Butter"],"Beat eggs, pour them into a buttered pan, add cheese, and fold."],
+["Beef Tacos",["Ground Beef","Tortillas","Onions","Tomatoes","Lettuce","Cheddar Cheese"],"Brown beef with onion, then fill the tortillas with beef, tomato, lettuce, and cheese."],
+["Garlic Butter Salmon",["Salmon","Butter","Garlic","Lemons"],"Pan-sear salmon 4 min per side, then baste with garlic butter and lemon."],
+["Bean & Rice Bowl",["Black Beans","Rice","Onions","Avocados"],"Cook rice, warm the beans with onion, and top with avocado."],
+["Peas & Butter Side",["Canned Peas","Butter"],"Heat peas, then stir in butter, salt, and pepper."],
+["Roast Chicken & Potatoes",["Chicken Breast","Potatoes","Carrots","Olive Oil"],"Toss everything in oil and roast at 425°F for 35 min."],
+["Steak & Mushrooms",["Steak","Mushrooms","Butter","Garlic"],"Sear steak 3-4 min per side and sauté mushrooms in garlic butter."],
+["Garden Salad",["Lettuce","Tomatoes","Cucumber","Carrots","Olive Oil"],"Chop, toss, and dress with oil and a pinch of salt."],
+["BLT Sandwich",["Bacon","Lettuce","Tomatoes","Bread"],"Crisp the bacon, then layer it on toast with lettuce and tomato."],
+["Shrimp Garlic Pasta",["Shrimp","Pasta","Garlic","Butter","Parmesan"],"Boil pasta, sauté shrimp in garlic butter, and toss with parmesan."],
+["Pork Chops & Corn",["Pork Chops","Corn","Butter"],"Pan-fry chops 5 min per side and boil corn, then butter it."],
+["Cheese Quesadilla",["Tortillas","Cheddar Cheese","Bell Peppers"],"Fill a tortilla with cheese and peppers and griddle until golden."],
+["Mashed Potatoes",["Potatoes","Butter","Milk"],"Boil potatoes, then mash with butter and warm milk."],
+["Spinach Mushroom Omelette",["Eggs","Spinach","Mushrooms","Cheddar Cheese"],"Sauté the vegetables, add beaten eggs and cheese, and fold."],
+["Fried Rice",["Rice","Eggs","Canned Peas","Carrots","Soy Sauce"],"Fry day-old rice with the vegetables, push it aside, scramble the eggs, and mix in soy sauce."],
+["Turkey Sandwich",["Turkey Slices","Bread","Lettuce","Cheddar Cheese"],"Stack and enjoy."],
+["Fruit Salad",["Apples","Bananas","Grapes","Strawberries","Oranges"],"Chop and toss with a squeeze of lemon."],
+["PB & Banana Toast",["Bread","Peanut Butter","Bananas"],"Toast the bread, spread peanut butter on it, and top with banana."],
+["Chicken Tacos",["Chicken Breast","Tortillas","Avocados","Onions"],"Grill and slice the chicken, then serve it in tortillas with avocado and onion."],
+["Tomato Bruschetta",["Bread","Tomatoes","Garlic","Olive Oil"],"Toast the bread, rub it with garlic, and top with diced tomato and oil."],
+["Yogurt Berry Bowl",["Yogurt","Blueberries","Strawberries"],"Layer the yogurt and berries."],
+["Beef & Broccoli",["Ground Beef","Broccoli","Soy Sauce","Garlic","Rice"],"Brown the beef with garlic, add broccoli and soy sauce, and serve over rice."]];
+const SAMPLE=`FRESHMART #214\n10/18/2026\nBANANAS 2 @ 0.69 1.38\nCANNED PEAS 3 @ 0.99 2.97\nCHICKEN BREAST 5.99\nEGGS 3.99\nPASTA 1.49\nCANNED TOMATOES 2 @ 1.29 2.58\nGARLIC 0.50\nONIONS 0.99\nCHEDDAR CHEESE 4.99\nBREAD 2.99\nSUBTOTAL 27.87\nTAX 1.39\nTOTAL 29.26`;
+let S=JSON.parse(localStorage.getItem("mp")||"null")||{pantry:{"Rice":{q:1,d:"2026-10-10"},"Olive Oil":{q:1,d:"2026-10-10"},"Butter":{q:1,d:"2026-10-10"},"Soy Sauce":{q:1,d:"2026-10-10"},"Broccoli":{q:2,d:"2026-10-12"},"Potatoes":{q:4,d:"2026-10-12"}},trips:[],cart:{}};
+const save=()=>localStorage.setItem("mp",JSON.stringify(S));
+const today=()=>new Date().toISOString().slice(0,10);let tab="home",cat="Fruits",review=[],ckStep=0,lastOrder=null;
+const TABS=[["home","🏠 Home"],["scan","🧾 Scan Receipt"],["pantry","🥫 Pantry"],["fridge","📸 Fridge"],["dinner","🍽 Dinner"],["store","🛒 Store"],["checkout","💳 Cart"]];
+function go(t){tab=t;if(t=="checkout"&&ckStep>2)ckStep=0;render();scrollTo(0,0)}
+function addPantry(n,q,d){const p=S.pantry[n]||{q:0};p.q+=q;p.d=d;S.pantry[n]=p}
+function matchName(s){s=s.toLowerCase();let best=null;for(const n in ALL){const k=n.toLowerCase();if(s.includes(k)||k.includes(s.trim())&&s.trim().length>3)if(!best||k.length>best.length)best=n}return best}
+function parse(text){const out=[];text.split("\n").forEach(l=>{const L=l.trim();if(!L||/subtotal|total|tax|change|cash|visa|#|\d+\/\d+\/\d+/i.test(L))return;
+const m=L.match(/^(.+?)\s+(?:(\d+)\s*@\s*[\d.]+\s+)?\$?(\d+\.\d{2})$/);if(!m)return;const raw=m[1].replace(/\s+\d+$/,"");
+out.push({name:matchName(raw)||raw.replace(/\b\w/g,c=>c.toUpperCase()).replace(/\B\w/g,c=>c.toLowerCase()),q:+(m[2]||1),p:+m[3]})});return out}
+function have(n){return S.pantry[n]&&S.pantry[n].q>0}
+const V={
+home(){const n=Object.keys(S.pantry).filter(have).length;return `<div class="card"><h2>Welcome home, Dr Magic 👋</h2><p>You have <b>${n}</b> items in your pantry, recorded from <b>${S.trips.length}</b> receipts.</p>
+<div class="row"><button class="btn" onclick="go('scan')">🧾 Add a receipt</button><button class="btn alt" onclick="go('dinner')">🍽 What's for dinner?</button><button class="btn alt" onclick="go('store')">🛒 Shop</button></div></div>
+<div class="card"><h3>Do I have…?</h3><input id="q" placeholder="e.g. peas" oninput="ask()"><div id="ans"></div></div>`},
+scan(){return `<div class="card"><h2>Scan a receipt</h2><p>Take a photo or upload a receipt. I'll read the items, and you confirm them before they're added.</p>
+<div class="row"><input type="file" accept="image/*" capture="environment" onchange="ocr(this.files[0])" style="max-width:300px"><button class="btn alt" onclick="useSample()">Use sample receipt</button></div>
+<div id="st" style="margin-top:10px"></div></div>${review.length?`<div class="card"><h3>Review items</h3><label>Store <input id="store" value="${review.store||"Grocery Store"}"></label>
+<table><tr><th>Item</th><th>Qty</th><th>Price</th><th></th></tr>${review.map((r,i)=>`<tr><td><input value="${r.name}" onchange="review[${i}].name=this.value"></td><td><input type="number" style="width:70px" value="${r.q}" onchange="review[${i}].q=+this.value"></td><td>$${r.p.toFixed(2)}</td><td><button onclick="review.splice(${i},1);render()">✕</button></td></tr>`).join("")}</table>
+<p><button class="btn" onclick="commit()">✅ Add ${review.length} items to pantry</button></p></div>`:""}`},
+pantry(){const items=Object.entries(S.pantry).filter(([n,p])=>p.q>0).sort();return `<div class="card"><h3>Do I have…?</h3><input id="q" placeholder="e.g. can of peas" oninput="ask()"><div id="ans"></div></div>
+<div class="card"><h2>Pantry (${items.length})</h2><table><tr><th>Item</th><th>Qty</th><th>Last bought</th><th></th></tr>${items.map(([n,p])=>`<tr><td>${ALL[n]?ALL[n].e:"📦"} ${n}</td><td>${p.q}</td><td>${p.d}</td><td><button onclick="adj('${n}',-1)">−</button> <button onclick="adj('${n}',1)">+</button></td></tr>`).join("")}</table></div>
+<div class="card"><h3>Receipt history</h3>${S.trips.length?S.trips.slice().reverse().map(t=>`<p><b>${t.date}</b> · ${t.store} · ${t.items.length} items${t.total?` · $${t.total.toFixed(2)}`:""}</p>`).join(""):"<p>No receipts yet.</p>"}</div>`},
+fridge(){return `<div class="card"><h2>📸 Fridge photo</h2><p>Take a picture of the inside of your fridge. I'll spot the items I can see and suggest what you can cook.</p>
+<div class="row"><button class="btn" onclick="camOn()">📷 Open camera</button><input type="file" accept="image/*" capture="environment" onchange="fimg(this.files[0])" style="max-width:260px"><button class="btn alt" onclick="fsample()">Use sample fridge</button></div>
+<video id="vid" autoplay playsinline class="hide" style="width:100%;margin-top:10px;border-radius:10px"></video><button id="snap" class="btn hide" onclick="snap()">📸 Take picture</button>
+<canvas id="cv" class="hide" style="width:100%;margin-top:10px;border-radius:10px"></canvas><div id="fst"></div></div>
+${fseen.length?`<div class="card"><h3>Seen in your fridge</h3>${fseen.map((n,i)=>`<span class="tag">${ALL[n]?ALL[n].e:"📦"} ${n} <a href="#" onclick="fseen.splice(${i},1);render();return false">✕</a></span>`).join("")}
+<div class="row" style="margin-top:8px"><select id="fadd">${Object.keys(ALL).sort().map(n=>`<option>${n}</option>`).join("")}</select><button class="btn alt" onclick="fseen.push(document.getElementById('fadd').value);render()">+ Add item I missed</button><button class="btn alt" onclick="fseen.forEach(n=>addPantry(n,1,today()));save();go('pantry')">Save to pantry</button></div></div>
+<h3>🍳 You could make (${fsug().length})</h3>${fsug().map(r=>`<div class="card"><h3>${r.t}</h3>${r.ing.map(i=>`<span class="tag ${r.ok(i)?"":"miss"}">${r.ok(i)?"✓":"✗"} ${i}</span>`).join("")}<p>${r.st}</p></div>`).join("")||"<p>No good matches yet. Try adding the items I missed.</p>"}`:""}`},
+dinner(){const by={};Object.keys(S.pantry).filter(have).forEach(n=>{const c=ALL[n]?ALL[n].c:"Other";(by[c]=by[c]||[]).push(n)});
+const sc=RECIPES.map(([t,ing,st])=>({t,ing,st,miss:ing.filter(i=>!have(i))})).sort((a,b)=>a.miss.length-b.miss.length);
+const now=sc.filter(r=>!r.miss.length),near=sc.filter(r=>r.miss.length&&r.miss.length<=2);
+const rc=r=>`<div class="card"><h3>${r.t}</h3>${r.ing.map(i=>`<span class="tag ${have(i)?"":"miss"}">${have(i)?"✓":"✗"} ${i}</span>`).join("")}<p>${r.st}</p>${r.miss.length?`<button class="btn alt" onclick='addMany(${JSON.stringify(r.miss)})'>Add missing to cart</button>`:""}</div>`;
+return `<div class="card"><h2>🍽 Dinner mode</h2><p>Here's what's in the house right now:</p>${Object.entries(by).map(([c,l])=>`<p><b>${c}:</b> ${l.map(n=>`<span class="tag">${n} ×${S.pantry[n].q}</span>`).join("")}</p>`).join("")||"<p>Pantry is empty. Scan a receipt first.</p>"}</div>
+<h3>✅ You can make now (${now.length})</h3>${now.map(rc).join("")||"<p>Nothing complete yet, so check the near matches below.</p>"}<h3>🛒 Missing just 1–2 items (${near.length})</h3>${near.map(rc).join("")}`},
+store(){return `<div class="card"><h2>🛒 Magic Market</h2><div class="cats">${Object.keys(CAT).map(c=>`<button class="${c==cat?"on":""}" onclick="cat='${c}';render()">${c}</button>`).join("")}</div></div>
+<div class="grid">${CAT[cat].map(([n,e,p,u])=>`<div class="item"><div class="e">${e}</div><b>${n}</b><div>$${p.toFixed(2)}/${u}</div>${have(n)?`<small style="color:var(--g)">In pantry: ${S.pantry[n].q}</small><br>`:""}<button class="btn" style="margin-top:6px" onclick="addCart('${n}')">${S.cart[n]?`In cart (${S.cart[n]}) +`:"Add"}</button></div>`).join("")}</div>`},
+checkout(){const it=Object.entries(S.cart),sub=it.reduce((s,[n,q])=>s+ALL[n].p*q,0),fee=S.mode=="delivery"?4.99:0,tax=sub*.05,tot=sub+tax+fee;
+if(ckStep==3)return `<div class="card" style="text-align:center"><h2>✅ Order confirmed</h2><p>Order #${lastOrder.id}, $${lastOrder.total.toFixed(2)} via ${lastOrder.pay}</p><p>${lastOrder.mode=="delivery"?"Delivery: today 5–6 PM":"Pickup: ready in 1 hour"}</p><p>The items have been added to your pantry.</p><p><i>Demo only: no charge was made.</i></p><button class="btn" onclick="ckStep=0;go('pantry')">View pantry</button></div>`;
+if(!it.length)return `<div class="card"><h2>Your cart is empty</h2><button class="btn" onclick="go('store')">Go shopping</button></div>`;
+const sum=`<table>${it.map(([n,q])=>`<tr><td>${ALL[n].e} ${n}</td><td><button onclick="addCart('${n}',-1)">−</button> ${q} <button onclick="addCart('${n}')">+</button></td><td>$${(ALL[n].p*q).toFixed(2)}</td></tr>`).join("")}
+<tr><td>Subtotal</td><td></td><td>$${sub.toFixed(2)}</td></tr><tr><td>Tax (5%)</td><td></td><td>$${tax.toFixed(2)}</td></tr>${fee?`<tr><td>Delivery</td><td></td><td>$4.99</td></tr>`:""}<tr><th>Total</th><td></td><th>$${tot.toFixed(2)}</th></tr></table>`;
+if(ckStep==0)return `<div class="card"><h2>Cart</h2>${sum}<p><button class="btn" onclick="ckStep=1;render()">Checkout →</button></p></div>`;
+if(ckStep==1)return `<div class="card"><h2>Pickup or delivery?</h2><div class="pay"><label><input type="radio" name="m" value="pickup" ${S.mode!="delivery"?"checked":""} onchange="S.mode='pickup';render()"> 🏬 Store pickup (free)</label><label><input type="radio" name="m" value="delivery" ${S.mode=="delivery"?"checked":""} onchange="S.mode='delivery';render()"> 🚚 Home delivery ($4.99)</label></div>${S.mode=="delivery"?`<input placeholder="Delivery address" id="addr">`:""}${sum}<p><button class="btn alt" onclick="ckStep=0;render()">← Back</button> <button class="btn" onclick="ckStep=2;render()">Payment →</button></p></div>`;
+return `<div class="card"><h2>Payment</h2><div class="pay">${["💳 Credit / Debit card","🅿️ PayPal"," Apple Pay","G Google Pay","💵 Cash on pickup"].map((p,i)=>`<label><input type="radio" name="pay" value="${p}" ${i==0?"checked":""} onchange="document.getElementById('cf').classList.toggle('hide',this.value.indexOf('card')<0)"> ${p}</label>`).join("")}</div>
+<div id="cf"><input id="cn" placeholder="Card number (demo: 4242 4242 4242 4242)" maxlength="19"><div class="row" style="margin-top:6px"><input id="ce" placeholder="MM/YY" style="flex:1"><input id="cc" placeholder="CVC" style="flex:1"></div><input id="cname" placeholder="Name on card" style="margin-top:6px"></div>
+<p id="err" style="color:#c00"></p><h3>Total: $${tot.toFixed(2)}</h3><p><button class="btn alt" onclick="ckStep=1;render()">← Back</button> <button class="btn" onclick="pay(${tot})">Place order (demo)</button></p></div>`}};
+function render(){document.getElementById("nav").innerHTML=TABS.map(([k,l])=>`<button class="${k==tab?"on":""}" onclick="go('${k}')">${l}${k=="checkout"&&Object.keys(S.cart).length?` (${Object.values(S.cart).reduce((a,b)=>a+b,0)})`:""}</button>`).join("");document.getElementById("app").innerHTML=V[tab]()}
+function ask(){const q=document.getElementById("q").value.toLowerCase().replace(/do i have|a can of|any|some|\?/g,"").trim(),a=document.getElementById("ans");if(q.length<2){a.innerHTML="";return}
+const hits=Object.keys(S.pantry).filter(n=>n.toLowerCase().includes(q)||q.includes(n.toLowerCase().replace(/^canned /,"")));const h=hits.filter(have);
+a.innerHTML=h.length?`<div class="ans yes">✅ Yes! ${h.map(n=>`<b>${S.pantry[n].q} × ${n}</b> (last bought ${S.pantry[n].d})`).join(", ")}</div>`:`<div class="ans no">❌ No, you don't have ${q} at home right now.${hits.length?` You last bought it on ${S.pantry[hits[0]].d}.`:""} <button class="btn alt" onclick="addMany(['${(matchName(q)||"").replace(/'/g,"")}'].filter(Boolean))">Add to cart</button></div>`}
+async function ocr(f){if(!f)return;const st=document.getElementById("st");st.textContent="Reading receipt…";try{await need("https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js");const r=await Tesseract.recognize(f,"eng",{logger:m=>m.progress&&(st.textContent=`Reading receipt… ${Math.round(m.progress*100)}%`)});review=parse(r.data.text);review.store=r.data.text.split("\n")[0];st.textContent=review.length?`Found ${review.length} items. Please review them below.`:"I couldn't find any items. Try a clearer photo.";render()}catch(e){st.textContent="OCR failed: "+e.message}}
+function useSample(){review=parse(SAMPLE);review.store="FreshMart #214";render()}
+function commit(){const store=document.getElementById("store").value,d=today();review.forEach(r=>addPantry(r.name,r.q,d));S.trips.push({date:d,store,items:review.map(r=>r.name),total:review.reduce((s,r)=>s+r.p,0)});review=[];save();go("pantry")}
+function adj(n,d){S.pantry[n].q=Math.max(0,S.pantry[n].q+d);save();render()}
+function addCart(n,d=1){S.cart[n]=(S.cart[n]||0)+d;if(S.cart[n]<=0)delete S.cart[n];save();render()}
+function addMany(l){l.forEach(n=>ALL[n]&&(S.cart[n]=(S.cart[n]||0)+1));save();go("checkout")}
+function pay(tot){const p=document.querySelector("[name=pay]:checked").value,e=document.getElementById("err");
+if(p.includes("card")){const n=document.getElementById("cn").value.replace(/\s/g,"");if(!/^\d{13,19}$/.test(n))return e.textContent="Please enter a valid card number.";if(!/^\d\d\/\d\d$/.test(document.getElementById("ce").value))return e.textContent="Expiry must be MM/YY.";if(!/^\d{3,4}$/.test(document.getElementById("cc").value))return e.textContent="CVC must be 3–4 digits."}
+e.textContent="Processing…";setTimeout(()=>{const items=Object.entries(S.cart);items.forEach(([n,q])=>addPantry(n,q,today()));S.trips.push({date:today(),store:"Magic Market (online)",items:items.map(i=>i[0]),total:tot});
+lastOrder={id:Math.floor(1e5+Math.random()*9e5),total:tot,pay:p,mode:S.mode||"pickup"};S.cart={};ckStep=3;save();render()},1200)}
+let fseen=[],model=null,stream=null;
+const MAP={banana:"Bananas",apple:"Apples",orange:"Oranges",broccoli:"Broccoli",carrot:"Carrots",bottle:"Milk",cake:null,sandwich:"Bread",pizza:null,"hot dog":null,donut:null,bowl:"Yogurt",cup:null};
+function fsug(){const ok=i=>fseen.includes(i)||have(i);return RECIPES.map(([t,ing,st])=>({t,ing,st,ok,m:ing.filter(i=>!ok(i)).length,u:ing.filter(i=>fseen.includes(i)).length})).filter(r=>r.u&&r.m<=1).sort((a,b)=>a.m-b.m||b.u-a.u)}
+async function camOn(){try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}});const v=document.getElementById("vid");v.srcObject=stream;v.classList.remove("hide");document.getElementById("snap").classList.remove("hide")}catch(e){document.getElementById("fst").textContent="The camera isn't available here. Upload a photo instead."}}
+function snap(){const v=document.getElementById("vid"),c=document.getElementById("cv");c.width=v.videoWidth;c.height=v.videoHeight;c.getContext("2d").drawImage(v,0,0);stream&&stream.getTracks().forEach(t=>t.stop());detect(c)}
+function fimg(f){if(!f)return;const im=new Image();im.onload=()=>{const c=document.getElementById("cv");c.width=im.width;c.height=im.height;c.getContext("2d").drawImage(im,0,0);detect(c)};im.src=URL.createObjectURL(f)}
+async function detect(c){const st=document.getElementById("fst");c.classList.remove("hide");st.textContent="Looking at your fridge…";try{await need("https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4/dist/tf.min.js");await need("https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2/dist/coco-ssd.min.js");model=model||await cocoSsd.load();const p=await model.detect(c,30,.35);const x=c.getContext("2d");x.lineWidth=4;x.strokeStyle="#2e7d32";x.font="24px sans-serif";x.fillStyle="#2e7d32";
+p.forEach(d=>{x.strokeRect(...d.bbox);x.fillText(d.class,d.bbox[0],d.bbox[1]-4)});const found=[...new Set(p.map(d=>MAP[d.class]).filter(Boolean))];fseen=[...new Set([...fseen,...found])];
+st.textContent=found.length?`I recognized ${found.length} items. Add anything I missed below.`:"I couldn't confidently identify any items. Add them below.";if(!fseen.length)fseen.push("Eggs");setTimeout(render,50)}catch(e){st.textContent="Detection failed: "+e.message}}
+function fsample(){fseen=["Eggs","Milk","Cheddar Cheese","Butter","Tomatoes","Lettuce","Bacon","Chicken Breast","Bell Peppers","Carrots"];render()}
+render();
+</script></body></html>
